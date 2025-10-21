@@ -8,7 +8,6 @@
 // });
 frappe.ui.form.on("Sales Invoice", {
     refresh(frm) {
-        // Create Payment Entry button
         if (!frm.is_new() && frm.doc.docstatus === 1) {
             frm.add_custom_button(__('Create Payment Entry'), function() {
                 frappe.call({
@@ -22,7 +21,6 @@ frappe.ui.form.on("Sales Invoice", {
                 });
             }, __("Create"));
 
-            // Create Sales Return button with dialog
             frm.add_custom_button(__('Return Items'), function() {
                 let dialog = new frappe.ui.Dialog({
                     title: __('Return Items'),
@@ -53,7 +51,6 @@ frappe.ui.form.on("Sales Invoice", {
                     ],
                     primary_action_label: __('Create Return'),
                     primary_action: function(values) {
-                        // Prepare items with updated qty for return
                         let return_items = values.return_items.map(i => ({
                             item: i.item,
                             qty: i.qty
