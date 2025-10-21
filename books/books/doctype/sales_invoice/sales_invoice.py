@@ -55,16 +55,9 @@ def create_payment_entry(invoice_name):
 
 @frappe.whitelist()
 def create_purchase_return(invoice_name, return_items=None):
-    """
-    Creates a Purchase Return (Debit Note) from a Purchase Invoice.
-    
-    invoice_name: Original Purchase Invoice name
-    return_items: Optional JSON list of items to return with qty
-    """
     import json
     invoice = frappe.get_doc("Purchase Invoice", invoice_name)
 
-    # Create new Purchase Invoice as return
     return_invoice = frappe.new_doc("Purchase Invoice")
     return_invoice.supplier = invoice.supplier
     return_invoice.company = invoice.company
@@ -72,7 +65,6 @@ def create_purchase_return(invoice_name, return_items=None):
     return_invoice.currency = invoice.currency
     return_invoice.amended_from = invoice.name
 
-    # Add items for return
     for item in invoice.items:
         qty_to_return = item.qty
         if return_items:
@@ -84,7 +76,7 @@ def create_purchase_return(invoice_name, return_items=None):
         return_invoice.append("items", {
             "item": item.item,
             "uom": item.uom,
-            "qty": -qty_to_return,  # negative for return
+            "qty": qty_to_return,
             "rate": item.rate,
             "discount_percentage": item.discount_percentage or 0
         })
