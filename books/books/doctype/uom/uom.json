@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:uom_name",
+ "creation": "2025-10-14 15:12:30.696153",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "uom_name",
+  "conversion_factor"
+ ],
+ "fields": [
+  {
+   "fieldname": "uom_name",
+   "fieldtype": "Data",
+   "label": "UOM Name",
+   "unique": 1
+  },
+  {
+   "fieldname": "conversion_factor",
+   "fieldtype": "Float",
+   "label": "Conversion Factor"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-15 12:19:13.875087",
+ "modified_by": "Administrator",
+ "module": "books",
+ "name": "UOM",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
