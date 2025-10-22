@@ -78,23 +78,33 @@ def create_payment_entry(invoice_name, amount_paid=None):
 
 
 @frappe.whitelist()
+<<<<<<< HEAD
 def create_sales_return(invoice_name, return_items):
+=======
+def create_purchase_return(invoice_name, return_items=None):
+>>>>>>> 89e478fc14c46d7bd5b06004156e4fd5f5ff778b
     import json
     if isinstance(return_items, str):
         return_items = json.loads(return_items)
 
+<<<<<<< HEAD
     invoice = frappe.get_doc("Sales Invoice", invoice_name)
 
     return_invoice = frappe.new_doc("Sales Invoice")
     return_invoice.is_return = 1
     return_invoice.return_against = invoice.name
     return_invoice.customer = invoice.customer
+=======
+    return_invoice = frappe.new_doc("Purchase Invoice")
+    return_invoice.supplier = invoice.supplier
+>>>>>>> 89e478fc14c46d7bd5b06004156e4fd5f5ff778b
     return_invoice.company = invoice.company
     return_invoice.posting_date = frappe.utils.nowdate()
     return_invoice.price_list = invoice.price_list
     return_invoice.discount_type = invoice.discount_type
     return_invoice.discount_value = invoice.discount_value
 
+<<<<<<< HEAD
     for i in return_items:
         return_invoice.append("items", {
             "item": i["item"],
@@ -106,6 +116,22 @@ def create_sales_return(invoice_name, return_items):
             "discount_amount": -1 * float(i.get("discount_amount", 0) or 0),
             "net_amount": -1 * float(i.get("net_amount", 0) or 0),
             "warehouse": i.get("warehouse")
+=======
+    for item in invoice.items:
+        qty_to_return = item.qty
+        if return_items:
+            selected_item = next((i for i in return_items if i["item"] == item.item), None)
+            if selected_item:
+                qty_to_return = selected_item["qty"]
+            else:
+                continue
+        return_invoice.append("items", {
+            "item": item.item,
+            "uom": item.uom,
+            "qty": qty_to_return,
+            "rate": item.rate,
+            "discount_percentage": item.discount_percentage or 0
+>>>>>>> 89e478fc14c46d7bd5b06004156e4fd5f5ff778b
         })
 
     return_invoice.calculate_totals()

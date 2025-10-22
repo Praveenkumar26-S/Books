@@ -15,7 +15,11 @@ frappe.ui.form.on("Sales Invoice", {
                     }
                 });
             }, __("Create"));
+<<<<<<< HEAD
          
+=======
+
+>>>>>>> 89e478fc14c46d7bd5b06004156e4fd5f5ff778b
             frm.add_custom_button(__('Return Items'), function() {
                 let dialog = new frappe.ui.Dialog({
                     title: __('Return Sales Items'),
@@ -52,6 +56,7 @@ frappe.ui.form.on("Sales Invoice", {
                         }
                     ],
                     primary_action_label: __('Create Return'),
+<<<<<<< HEAD
                     primary_action(values) {
                         let return_items = [];
                         (values.return_items || []).forEach(row => {
@@ -72,6 +77,14 @@ frappe.ui.form.on("Sales Invoice", {
                             frappe.msgprint(__('Please enter at least one item with Return Qty'));
                             return;
                         }
+=======
+                    primary_action: function(values) {
+                        let return_items = values.return_items.map(i => ({
+                            item: i.item,
+                            qty: i.qty
+                        }));
+
+>>>>>>> 89e478fc14c46d7bd5b06004156e4fd5f5ff778b
                         frappe.call({
                             method: "books.books.doctype.sales_invoice.sales_invoice.create_sales_return",
                             args: {
