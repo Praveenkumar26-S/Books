@@ -3,8 +3,6 @@
 
 import frappe
 from frappe.model.document import Document
-
-
 class PurchaseInvoice(Document):
     def validate(self):
         self.calculate_totals()
@@ -53,3 +51,27 @@ def create_payment_entry(invoice_name):
     payment.insert()
     invoice.db_set("payment_entry", payment.name)
     return payment.name
+
+@frappe.whitelist()
+def create_purchase_return(invoice_name, return_items):
+    return_items = frappe.parse_json(return_items)
+    pi = frappe.get_doc("Purchase Invoice", invoice_name)
+
+    new_pi = frappe.new_doc("Purchase Invoice")
+    new_pi.is_return = 1
+    new_pi.return_against = pi.name
+    new_pi.supplier = pi.supplier
+    new_pi.company = pi.company
+    new_pi.items = []
+
+    for i in return_items:
+        new_pi.append("items", {
+            "item": i["item"],
+            "qty": -1 * float(i["qty"]),
+            "rate": i["rate"],
+            "amount": -1 * float(i["amount"]),
+        })
+
+    new_pi.insert(ignore_permissions=True)
+    new_pi.submit()
+    return new_pi.name

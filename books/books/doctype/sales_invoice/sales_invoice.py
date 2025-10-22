@@ -3,8 +3,6 @@
 
 import frappe
 from frappe.model.document import Document
-
-
 class SalesInvoice(Document):
     def validate(self):
         self.calculate_totals()
@@ -35,60 +33,85 @@ class SalesInvoice(Document):
             self.discount_amount = 0
         self.grand_total = total - self.discount_amount
         self.rounded_total = round(self.grand_total, 2)
-        
+
 @frappe.whitelist()
-def create_payment_entry(invoice_name):
+def create_payment_entry(invoice_name, amount_paid=None):
     invoice = frappe.get_doc("Sales Invoice", invoice_name)
+
+    total_paid = frappe.db.sql("""
+        SELECT SUM(amount_paid)
+        FROM `tabPayment Entry`
+        WHERE reference_invoice = 'Sales Invoice' AND reference_name = %s AND docstatus = 1
+    """, (invoice.name,), as_dict=True)[0].get("SUM(amount_paid)") or 0
+
+    if amount_paid is None:
+        amount_to_pay = invoice.rounded_total - total_paid
+    else:
+        amount_to_pay = float(amount_paid)
+
+    outstanding = invoice.rounded_total - total_paid
+    if outstanding <= 0:
+        frappe.throw("The invoice is fully paid.")
+
+    if amount_to_pay > outstanding:
+        frappe.throw(f"Payment cannot be more than outstanding amount ({outstanding})")
+
     payment = frappe.new_doc("Payment Entry")
     payment.payment_type = "Receive"
     payment.party_type = "Customer"
     payment.party = invoice.customer
-    payment.reference_type = "Sales Invoice"
+    payment.reference_invoice = "Sales Invoice"
     payment.reference_name = invoice.name
-    payment.amount_paid = invoice.rounded_total
+    payment.amount_paid = amount_to_pay
     payment.reference_amount = invoice.rounded_total
     payment.mode_of_payment = "Cash"
     payment.posting_date = frappe.utils.nowdate()
     payment.insert()
+
+    total_paid += amount_to_pay
+    remaining_outstanding = invoice.rounded_total - total_paid
+    invoice.db_set("outstanding_amount", remaining_outstanding)
+
     invoice.db_set("payment_entry", payment.name)
+
     return payment.name
 
+
 @frappe.whitelist()
-def create_purchase_return(invoice_name, return_items=None):
-    """
-    Creates a Purchase Return (Debit Note) from a Purchase Invoice.
-    
-    invoice_name: Original Purchase Invoice name
-    return_items: Optional JSON list of items to return with qty
-    """
+def create_sales_return(invoice_name, return_items):
     import json
-    invoice = frappe.get_doc("Purchase Invoice", invoice_name)
+    if isinstance(return_items, str):
+        return_items = json.loads(return_items)
 
-    # Create new Purchase Invoice as return
-    return_invoice = frappe.new_doc("Purchase Invoice")
-    return_invoice.supplier = invoice.supplier
+    invoice = frappe.get_doc("Sales Invoice", invoice_name)
+
+    return_invoice = frappe.new_doc("Sales Invoice")
+    return_invoice.is_return = 1
+    return_invoice.return_against = invoice.name
+    return_invoice.customer = invoice.customer
     return_invoice.company = invoice.company
+    return_invoice.posting_date = frappe.utils.nowdate()
     return_invoice.price_list = invoice.price_list
-    return_invoice.currency = invoice.currency
-    return_invoice.amended_from = invoice.name
+    return_invoice.discount_type = invoice.discount_type
+    return_invoice.discount_value = invoice.discount_value
 
-    # Add items for return
-    for item in invoice.items:
-        qty_to_return = item.qty
-        if return_items:
-            selected_item = next((i for i in return_items if i["item"] == item.item), None)
-            if selected_item:
-                qty_to_return = selected_item["qty"]
-            else:
-                continue
+    for i in return_items:
         return_invoice.append("items", {
-            "item": item.item,
-            "uom": item.uom,
-            "qty": -qty_to_return,  # negative for return
-            "rate": item.rate,
-            "discount_percentage": item.discount_percentage or 0
+            "item": i["item"],
+            "uom": i.get("uom"),
+            "qty": -1 * float(i["qty"]),
+            "rate": float(i.get("rate", 0)),
+            "amount": -1 * float(i.get("amount", 0)),
+            "discount_percentage": i.get("discount_percentage") or 0,
+            "discount_amount": -1 * float(i.get("discount_amount", 0) or 0),
+            "net_amount": -1 * float(i.get("net_amount", 0) or 0),
+            "warehouse": i.get("warehouse")
         })
 
     return_invoice.calculate_totals()
-    return_invoice.insert()
+    return_invoice.insert(ignore_permissions=True)
+    return_invoice.submit()
+    return_invoice.db_set("status", "Returned")
+
+    frappe.msgprint(f"Sales Return <b>{return_invoice.name}</b> created successfully.")
     return return_invoice.name

@@ -22,7 +22,10 @@
   "grand_total",
   "rounded_total",
   "payment_status",
-  "payment_entry"
+  "outstanding_amount",
+  "payment_entry",
+  "status",
+  "return_against"
  ],
  "fields": [
   {
@@ -127,13 +130,30 @@
    "label": "Payment Entry",
    "options": "Payment Entry",
    "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReturned\nCancelled"
+  },
+  {
+   "fieldname": "return_against",
+   "fieldtype": "Link",
+   "label": "Return Against",
+   "options": "Sales Invoice"
+  },
+  {
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-18 18:13:59.823118",
+ "modified": "2025-10-22 13:58:49.214114",
  "modified_by": "Administrator",
  "module": "books",
  "name": "Sales Invoice",
