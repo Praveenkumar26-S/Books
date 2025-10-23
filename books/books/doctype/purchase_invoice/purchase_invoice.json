@@ -21,8 +21,12 @@
   "discount_amount",
   "grand_total",
   "rounded_total",
+  "outstanding_amount",
   "payment_status",
-  "payment_entry"
+  "payment_entry",
+  "status",
+  "return_against",
+  "is_return"
  ],
  "fields": [
   {
@@ -125,13 +129,36 @@
    "label": "Payment Entry",
    "options": "Payment Entry",
    "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nReturned\nCancelled"
+  },
+  {
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount"
+  },
+  {
+   "fieldname": "return_against",
+   "fieldtype": "Link",
+   "label": "Return Against",
+   "options": "Purchase Invoice"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_return",
+   "fieldtype": "Check",
+   "label": "Is Return"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-18 18:18:02.294261",
+ "modified": "2025-10-23 15:33:54.663948",
  "modified_by": "Administrator",
  "module": "books",
  "name": "Purchase Invoice",
