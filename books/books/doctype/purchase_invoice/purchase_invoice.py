@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+import json
 from frappe.model.document import Document
 class PurchaseInvoice(Document):
     def validate(self):
@@ -68,6 +69,7 @@ def create_payment_entry(invoice_name):
     payment.reference_amount = invoice.rounded_total
     payment.mode_of_payment = "Cash"
     payment.posting_date = frappe.utils.nowdate()
+    payment.company = invoice.company
     payment.insert()
 
     total_paid += payment.amount_paid
@@ -81,7 +83,6 @@ def create_payment_entry(invoice_name):
 
 @frappe.whitelist()
 def create_purchase_return(invoice_name, return_items):
-    import json
     if isinstance(return_items, str):
         return_items = json.loads(return_items)
     invoice = frappe.get_doc("Purchase Invoice", invoice_name)

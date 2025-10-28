@@ -1,7 +1,6 @@
 // Copyright (c) 2025, Praveen and contributors
 // For license information, please see license.txt
 
-
 frappe.ui.form.on("Payment Entry", {
     reference_name: function(frm) {
         if (frm.doc.reference_invoice && frm.doc.reference_name) {
@@ -26,4 +25,11 @@ frappe.ui.form.on("Payment Entry", {
             });
         }
     },
+    amount_paid: function(frm) {
+        if (frm.doc.reference_amount && frm.doc.amount_paid) {
+            const outstanding = frm.doc.reference_amount - frm.doc.amount_paid;
+            frm.set_value("outstanding_amount", outstanding);
+            frm.refresh_field("outstanding_amount");
+        }
+    }
 });

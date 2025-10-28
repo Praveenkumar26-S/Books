@@ -9,7 +9,7 @@
   "supplier_name",
   "supplier_group",
   "phone_number",
-  "mail",
+  "email",
   "company"
  ],
  "fields": [
@@ -35,23 +35,23 @@
    "label": "Phone Number"
   },
   {
-   "fieldname": "mail",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Email",
-   "reqd": 1
-  },
-  {
    "fieldname": "company",
    "fieldtype": "Link",
    "label": "Company",
    "options": "Company"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-15 15:29:16.947272",
+ "modified": "2025-10-24 15:39:20.482936",
  "modified_by": "Administrator",
  "module": "books",
  "name": "Supplier",

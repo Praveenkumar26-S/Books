@@ -5,6 +5,28 @@ app_description = "books"
 app_email = "kumarpraveen97917@gmail.com"
 app_license = "mit"
 
+
+doc_events = {
+    "Sales Invoice": {
+        "on_submit": [
+            "books.api.send_invoice_email",
+            "books.api.update_stock_on_sales"
+        ]
+    },
+    "Purchase Invoice": {
+        "on_submit": [
+            "books.api.send_invoice_email",
+            "books.api.update_stock_on_purchase"
+        ]
+    },
+    "Payment Entry": {
+        "on_submit": [
+            "books.api.send_payment_email"
+        ]
+    }
+}
+
+
 # Apps
 # ------------------
 
