@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "autoname": "SLE-.###",
  "creation": "2025-10-24 13:27:23.650176",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -56,10 +57,11 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-10-24 15:57:43.430933",
+ "modified": "2025-11-04 12:04:09.406220",
  "modified_by": "Administrator",
  "module": "books",
  "name": "Stock Ledger Entry",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {

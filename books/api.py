@@ -113,3 +113,54 @@ def update_stock_on_sales(doc, method=None):
             sb.stock_uom = item.uom
             sb.company = doc.company
             sb.insert(ignore_permissions=True)
+
+
+import frappe
+
+@frappe.whitelist()
+def get_profit_and_loss_trend(period='Monthly'):
+    """
+    Returns profit and loss data grouped by month or day.
+    """
+    date_format = "%Y-%m" if period == 'Monthly' else "%Y-%m-%d"
+
+    sales_data = frappe.db.sql(f"""
+        SELECT DATE_FORMAT(posting_date, '{date_format}') AS period, 
+               SUM(total) AS total_sales
+        FROM `tabSales Invoice`
+        WHERE docstatus = 1
+        GROUP BY period
+        ORDER BY period
+    """, as_dict=True)
+
+    purchase_data = frappe.db.sql(f"""
+        SELECT DATE_FORMAT(posting_date, '{date_format}') AS period, 
+               SUM(total) AS total_purchases
+        FROM `tabPurchase Invoice`
+        WHERE docstatus = 1
+        GROUP BY period
+        ORDER BY period
+    """, as_dict=True)
+
+    # Merge both into one dict
+    result = {}
+    for s in sales_data:
+        result[s.period] = {'sales': s.total_sales, 'purchases': 0}
+    for p in purchase_data:
+        result.setdefault(p.period, {'sales': 0, 'purchases': 0})
+        result[p.period]['purchases'] = p.total_purchases
+
+    # Convert to list
+    labels = sorted(result.keys())
+    sales = [result[d]['sales'] for d in labels]
+    purchases = [result[d]['purchases'] for d in labels]
+    profit = [result[d]['sales'] - result[d]['purchases'] for d in labels]
+
+    return {
+        "labels": labels,
+        "datasets": [
+            {"name": "Sales", "values": sales},
+            {"name": "Purchases", "values": purchases},
+            {"name": "Profit/Loss", "values": profit},
+        ]
+    }

@@ -1,26 +1,25 @@
-# Copyright (c) 2025, Praveen and contributors
+# Copyright (c) 2025, Praveen
 # For license information, please see license.txt
 
 import frappe
 import json
 from frappe.model.document import Document
+
 class PurchaseInvoice(Document):
     def validate(self):
         self.calculate_totals()
+        self.update_payment_summary()
+
     def calculate_totals(self):
         total_qty = 0
         total = 0
+
         for item in self.items:
             if not item.rate:
                 rate = frappe.db.get_value(
                     "Price List",
-                    {
-                        "item": item.item,
-                        "uom": item.uom,
-                        "price_list_type": "Purchase",
-                        "name": self.price_list,
-                    },
-                    "rate",
+                    {"item": item.item,"uom": item.uom,"price_list_type": "Purchase","name": self.price_list},
+                    "rate"
                 )
                 item.rate = rate or 0
 
@@ -44,20 +43,36 @@ class PurchaseInvoice(Document):
         self.grand_total = total - self.discount_amount
         self.rounded_total = round(self.grand_total, 2)
 
+    def update_payment_summary(self):
+        total_paid = get_total_paid(self.name)
+        self.paid_amount = total_paid
+        self.outstanding_amount = round(self.rounded_total - total_paid, 2)
+
+        if self.outstanding_amount <= 0:
+            self.payment_status = "Paid"
+        elif 0 < self.paid_amount < self.rounded_total:
+            self.payment_status = "Partially Paid"
+        else:
+            self.payment_status = "Unpaid"
+            
+def get_total_paid(invoice_name):
+    result = frappe.db.sql("""
+        SELECT SUM(amount_paid) AS total_paid
+        FROM `tabPayment Entry`
+        WHERE reference_invoice = 'Purchase Invoice'
+        AND reference_name = %s
+        AND docstatus = 1
+    """, (invoice_name,), as_dict=True)
+    return result[0].total_paid or 0
 
 @frappe.whitelist()
 def create_payment_entry(invoice_name):
     invoice = frappe.get_doc("Purchase Invoice", invoice_name)
-
-    total_paid = frappe.db.sql("""
-        SELECT SUM(amount_paid)
-        FROM `tabPayment Entry`
-        WHERE reference_invoice = 'Purchase Invoice' AND reference_name = %s AND docstatus = 1
-    """, (invoice.name,), as_dict=True)[0].get("SUM(amount_paid)") or 0
-
+    total_paid = get_total_paid(invoice.name)
     outstanding = invoice.rounded_total - total_paid
+
     if outstanding <= 0:
-        frappe.throw("This invoice is already fully paid.")
+        frappe.throw("The invoice is already fully paid.")
 
     payment = frappe.new_doc("Payment Entry")
     payment.payment_type = "Pay"
@@ -68,23 +83,32 @@ def create_payment_entry(invoice_name):
     payment.amount_paid = outstanding
     payment.reference_amount = invoice.rounded_total
     payment.mode_of_payment = "Cash"
-    payment.posting_date = frappe.utils.nowdate()
     payment.company = invoice.company
-    payment.insert()
+    payment.posting_date = frappe.utils.nowdate()
+    payment.insert(ignore_permissions=True)
 
     total_paid += payment.amount_paid
     remaining_outstanding = invoice.rounded_total - total_paid
+
+    invoice.db_set("paid_amount", total_paid)
     invoice.db_set("outstanding_amount", remaining_outstanding)
     invoice.db_set("payment_entry", payment.name)
 
+    if remaining_outstanding <= 0:
+        invoice.db_set("payment_status", "Paid")
+    elif total_paid > 0:
+        invoice.db_set("payment_status", "Partially Paid")
+    else:
+        invoice.db_set("payment_status", "Unpaid")
+
     frappe.msgprint(f"Payment Entry <b>{payment.name}</b> created successfully.")
     return payment.name
-
 
 @frappe.whitelist()
 def create_purchase_return(invoice_name, return_items):
     if isinstance(return_items, str):
         return_items = json.loads(return_items)
+
     invoice = frappe.get_doc("Purchase Invoice", invoice_name)
 
     return_invoice = frappe.new_doc("Purchase Invoice")
@@ -110,12 +134,9 @@ def create_purchase_return(invoice_name, return_items):
             "warehouse": i.get("warehouse")
         })
 
-    if hasattr(return_invoice, "calculate_totals"):
-        return_invoice.calculate_totals()
-
+    return_invoice.calculate_totals()
     return_invoice.insert(ignore_permissions=True)
-    return_invoice.submit()
     return_invoice.db_set("status", "Returned")
-    
+
     frappe.msgprint(f"Purchase Return <b>{return_invoice.name}</b> created successfully.")
     return return_invoice.name

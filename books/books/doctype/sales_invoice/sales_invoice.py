@@ -105,7 +105,7 @@ def create_payment_entry(invoice_name):
 
 @frappe.whitelist()
 def create_sales_return(invoice_name, return_items):
-    
+
     if isinstance(return_items, str):
         return_items = json.loads(return_items)
 

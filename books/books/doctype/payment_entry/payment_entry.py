@@ -131,3 +131,5 @@ def update_invoice_payment_status(reference_invoice, reference_name):
         inv.payment_status = "Paid" if outstanding <= 0 else "Partially Paid"
 
         inv.db_update()
+
+        frappe.msgprint(f"Purchase Invoice {reference_name} updated — Paid: {total_paid}, Outstanding: {outstanding}")

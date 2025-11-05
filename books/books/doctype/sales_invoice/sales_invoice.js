@@ -87,7 +87,7 @@ frappe.ui.form.on("Sales Invoice", {
                             frappe.msgprint(__('Please enter at least one item.'));
                             return;
                         }
-
+                        
                         frappe.call({
                             method: "books.books.doctype.sales_invoice.sales_invoice.create_sales_return",
                             args: {

@@ -22,6 +22,7 @@
   "grand_total",
   "rounded_total",
   "outstanding_amount",
+  "paid_amount",
   "payment_status",
   "payment_entry",
   "status",
@@ -152,13 +153,18 @@
    "fieldname": "is_return",
    "fieldtype": "Check",
    "label": "Is Return"
+  },
+  {
+   "fieldname": "paid_amount",
+   "fieldtype": "Currency",
+   "label": "Paid Amount"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-27 09:23:07.032787",
+ "modified": "2025-10-29 12:10:42.834922",
  "modified_by": "Administrator",
  "module": "books",
  "name": "Purchase Invoice",
